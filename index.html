@@ -56,6 +56,12 @@
         <div id="quiz-container" class="hidden p-8 rounded-lg shadow-xl quiz-card max-w-2xl mx-auto">
             <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-blue-300 mb-6 text-center"></h2>
             <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <!-- Rationale Display -->
+            <div id="rationale-display" class="mt-6 p-4 rounded-lg bg-gray-800 hidden">
+                <p class="text-sm font-semibold text-blue-400 mb-1">Explanation:</p>
+                <p id="rationale-text" class="text-gray-300 text-sm"></p>
+            </div>
+            <!-- End Rationale Display -->
             <div class="mt-8 text-center">
                 <button id="next-btn" class="btn-blue font-bold py-3 px-6 rounded-lg shadow-md hidden">Next</button>
             </div>
@@ -179,8 +185,10 @@
         const scoreText = document.getElementById('score-text');
         const summaryContainer = document.getElementById('summary-container');
         const restartBtn = document.getElementById('restart-btn');
-        // New element reference for the Copy button
         const copyBtn = document.getElementById('copy-btn');
+        const rationaleDisplay = document.getElementById('rationale-display');
+        const rationaleText = document.getElementById('rationale-text');
+
 
         startBtn.addEventListener('click', startQuiz);
         nextBtn.addEventListener('click', () => {
@@ -192,7 +200,6 @@
             }
         });
         restartBtn.addEventListener('click', resetQuiz);
-        // New event listener for the Copy button
         copyBtn.addEventListener('click', copyResults);
 
         function startQuiz() {
@@ -222,6 +229,7 @@
 
         function resetState() {
             nextBtn.classList.add('hidden');
+            rationaleDisplay.classList.add('hidden');
             while (answerButtons.firstChild) {
                 answerButtons.removeChild(answerButtons.firstChild);
             }
@@ -231,12 +239,16 @@
             const selectedBtn = e.target;
             const isCorrect = selectedBtn.dataset.isCorrect === 'true';
             
+            // Find the correct answer object and its rationale
+            const currentQuestion = questions[currentQuestionIndex];
+            const correctAnswerObj = currentQuestion.answers.find(a => a.isCorrect);
+
             userAnswers[currentQuestionIndex] = {
-                question: questions[currentQuestionIndex].question,
+                question: currentQuestion.question,
                 selectedAnswer: selectedBtn.innerText,
                 isCorrect: isCorrect,
-                correctAnswer: questions[currentQuestionIndex].answers.find(a => a.isCorrect).text,
-                rationale: questions[currentQuestionIndex].answers.find(a => a.isCorrect).rationale
+                correctAnswer: correctAnswerObj.text,
+                rationale: correctAnswerObj.rationale
             };
 
             if (isCorrect) {
@@ -253,6 +265,10 @@
                 button.classList.add('btn-disabled');
             });
             nextBtn.classList.remove('hidden');
+
+            // Display Rationale after selection
+            rationaleText.innerText = correctAnswerObj.rationale;
+            rationaleDisplay.classList.remove('hidden');
         }
 
         function showResults() {
