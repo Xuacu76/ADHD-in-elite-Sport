@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ADHD Quiz for Athletes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0E1628;
+            color: #E2E8F0;
+        }
+        .container {
+            max-width: 960px;
+        }
+        .quiz-card {
+            background-color: #1A263A;
+            border: 2px solid #3B82F6;
+        }
+        .btn-blue {
+            background-color: #3B82F6;
+            color: white;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .btn-blue:hover {
+            transform: translateY(-2px);
+            background-color: #2563EB;
+        }
+        .btn-correct {
+            background-color: #10B981;
+            border-color: #059669;
+        }
+        .btn-incorrect {
+            background-color: #EF4444;
+            border-color: #DC2626;
+        }
+        .btn-disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="p-6 md:p-12 flex justify-center items-center min-h-screen">
+    <div class="container mx-auto">
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="text-center p-8 rounded-lg shadow-xl quiz-card">
+            <h1 class="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 mb-4">ADHD in Elite Sports Quiz</h1>
+            <p class="text-lg sm:text-xl text-gray-300 mb-6">Test your knowledge on the challenges and advantages of ADHD in athletes.</p>
+            <button id="start-btn" class="btn-blue font-bold py-3 px-6 rounded-lg shadow-md">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="hidden p-8 rounded-lg shadow-xl quiz-card max-w-2xl mx-auto">
+            <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-blue-300 mb-6 text-center"></h2>
+            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div class="mt-8 text-center">
+                <button id="next-btn" class="btn-blue font-bold py-3 px-6 rounded-lg shadow-md hidden">Next</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden p-8 rounded-lg shadow-xl quiz-card max-w-2xl mx-auto text-center">
+            <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 mb-4">Quiz Complete!</h2>
+            <p id="score-text" class="text-2xl text-gray-300 mb-6"></p>
+            <div id="summary-container" class="text-left mt-8"></div>
+            <div class="mt-8">
+                <button id="copy-btn" class="btn-blue font-bold py-3 px-6 rounded-lg shadow-md mr-4">Copy Results</button>
+                <button id="restart-btn" class="btn-blue font-bold py-3 px-6 rounded-lg shadow-md">Restart Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "According to the guide, what is the estimated prevalence range of ADHD in elite athletes?",
+                answers: [
+                    { text: "1% to 3%", isCorrect: false, rationale: "This range is lower than the figures suggested by recent studies in sports medicine." },
+                    { text: "4% to 8%", isCorrect: true, rationale: "This range aligns with the findings from systematic reviews and consensus statements." },
+                    { text: "10% to 15%", isCorrect: false, rationale: "This range is significantly higher than what current research typically indicates for this population." },
+                    { text: "It is the same as the general population.", isCorrect: false, rationale: "The text suggests the prevalence in athletes might be slightly different from that of the general population." }
+                ]
+            },
+            {
+                question: "Which of the following is described as a potential competitive ADVANTAGE for an athlete with ADHD?",
+                answers: [
+                    { text: "Difficulty following complex game plans", isCorrect: false, rationale: "This is presented as a challenge related to structure and tactics, not an advantage." },
+                    { text: "Hyperfocus", isCorrect: true, rationale: "This ability to enter a state of intense concentration allows an athlete to block out distractions and perform optimally." },
+                    { text: "Emotional Dysregulation", isCorrect: false, rationale: "Experiencing frustration or anxiety more intensely is listed as a characteristic, but not a competitive advantage." },
+                    { text: "Inconsistency in performance", isCorrect: false, rationale: "Erratic performance due to inattention is highlighted as a significant disadvantage." }
+                ]
+            },
+            {
+                question: "An athlete gets easily frustrated by a referee's call and makes an impulsive foul. Which intervention specifically aims to reduce this type of immediate, automatic reaction?",
+                answers: [
+                    { text: "Executive Function Coaching", isCorrect: false, rationale: "This intervention is more focused on improving organization, planning, and time management skills." },
+                    { text: "Mindfulness and Acceptance Therapy (ACT)", isCorrect: true, rationale: "These therapies train the brain to observe thoughts and feelings without reacting automatically, directly addressing impulsive responses." },
+                    { text: "Cognitive Behavioral Therapy (CBT)", isCorrect: false, rationale: "CBT works on restructuring thought patterns, which is related, but Mindfulness/ACT specifically targets the mechanism of non-reactive observation." },
+                    { text: "Psychoeducation", isCorrect: false, rationale: "While understanding the condition is helpful, this approach doesn't directly train the skill of managing in-the-moment reactions." }
+                ]
+            },
+            {
+                question: "Why is diagnosing ADHD in athletes considered complex?",
+                answers: [
+                    { text: "Athletes are less likely to report their symptoms.", isCorrect: false, rationale: "While possible, the primary complexity mentioned in the text relates to the nature of the symptoms themselves in a sports context." },
+                    { text: "There are no reliable tests for ADHD.", isCorrect: false, rationale: "Reliable diagnostic methods for ADHD exist, but the challenge lies in their application within the athletic population." },
+                    { text: "ADHD symptoms can be confused with typical athlete behaviors.", isCorrect: true, rationale: "Traits like high energy and impulsivity are common in high-intensity sports and can overlap with ADHD symptoms, making diagnosis difficult." },
+                    { text: "Physical activity completely masks all ADHD symptoms.", isCorrect: false, rationale: "The text states that exercise is beneficial and helps manage symptoms, but it does not suggest it eliminates them entirely." }
+                ]
+            },
+            {
+                question: "An athlete is consistently late for practice and forgets equipment. Which psychological intervention is best suited to address these specific issues?",
+                answers: [
+                    { text: "Executive Function Coaching", isCorrect: true, rationale: "This approach directly targets practical skills like organization, planning, and time management." },
+                    { text: "Mindfulness", isCorrect: false, rationale: "Mindfulness is primarily focused on improving attentional control and reducing impulsivity, not on logistical skills." },
+                    { text: "Cognitive Behavioral Therapy (CBT)", isCorrect: false, rationale: "CBT would focus more on the thoughts and feelings behind the behavior, rather than the practical organizational systems needed to solve it." },
+                    { text: "Psychoeducation", isCorrect: false, rationale: "Understanding why they forget things is a first step, but this intervention provides the practical tools and strategies to prevent it." }
+                ]
+            },
+            {
+                question: "What is the primary goal of Cognitive Behavioral Therapy (CBT) as an intervention for athletes with ADHD?",
+                answers: [
+                    { text: "To obtain a Therapeutic Use Exemption (TUE) for medication.", isCorrect: false, rationale: "Navigating TUEs is a management challenge, but it is not the goal of a therapeutic intervention like CBT." },
+                    { text: "To improve physical conditioning and energy levels.", isCorrect: false, rationale: "CBT is a psychological therapy and does not directly address physical fitness." },
+                    { text: "To restructure negative thought patterns and improve emotional regulation.", isCorrect: true, rationale: "CBT directly addresses the connection between thoughts, emotions, and behaviors to help athletes manage self-criticism and emotional responses." },
+                    { text: "To externalize functions through tools like checklists.", isCorrect: false, rationale: "Using external tools to manage daily tasks is the primary focus of Executive Function Coaching." }
+                ]
+            },
+            {
+                question: "A coach wants to better support an athlete with ADHD. According to the guide, what is a recommended strategy?",
+                answers: [
+                    { text: "Holding longer, more detailed tactical meetings.", isCorrect: false, rationale: "The text suggests that long, monotonous tasks are difficult, so this would likely be counterproductive." },
+                    { text: "Providing feedback only at the end of the week.", isCorrect: false, rationale: "The document emphasizes that the ADHD brain responds better to feedback that is immediate, not delayed." },
+                    { text: "Using clear, concise instructions and providing frequent feedback.", isCorrect: true, rationale: "This approach adapts the environment to the athlete's needs, reducing cognitive load and reinforcing behavior effectively." },
+                    { text: "Ensuring training sessions are repetitive and predictable.", isCorrect: false, rationale: "While structure is important, the text notes a low tolerance for boredom, suggesting dynamic and varied sessions are more effective." }
+                ]
+            },
+            {
+                question: "Which of the following is a significant CHALLENGE, as opposed to a characteristic, for an athlete with ADHD?",
+                answers: [
+                    { text: "Variable Attention Patterns", isCorrect: false, rationale: "This is a core characteristic describing how their attention works, which can lead to both advantages and disadvantages." },
+                    { text: "Stimulation-Seeking", isCorrect: false, rationale: "This is described as a characteristic that explains their attraction to certain types of sports." },
+                    { text: "Emotional Dysregulation", isCorrect: false, rationale: "This is defined as a characteristic related to the intensity of their emotional experiences." },
+                    { text: "Higher Risk of Injury", isCorrect: true, rationale: "This is presented as a potential negative outcome or obstacle resulting from traits like impulsivity and risk-seeking behavior." }
+                ]
+            },
+            {
+                question: "What major administrative hurdle do elite athletes with ADHD face if they use stimulant medication?",
+                answers: [
+                    { text: "Finding a pharmacy that stocks the medication.", isCorrect: false, rationale: "While a potential issue, the text highlights a specific challenge related to sports regulations." },
+                    { text: "The high cost of the medication.", isCorrect: false, rationale: "Cost is not mentioned as the primary challenge in the context of elite sports rules." },
+                    { text: "Obtaining a Therapeutic Use Exemption (TUE) from WADA.", isCorrect: true, rationale: "Stimulants are regulated substances, and athletes must go through a rigorous process to be approved for their medical use in competition." },
+                    { text: "The medication is not effective for athletes.", isCorrect: false, rationale: "The text does not suggest the medication is ineffective; the challenge is procedural." }
+                ]
+            },
+            {
+                question: "The guide suggests that physical activity is a sufficient standalone treatment for managing ADHD in athletes. True or False?",
+                answers: [
+                    { text: "True", isCorrect: false, rationale: "The text describes exercise as highly beneficial for managing symptoms, but it also details a wide range of necessary psychological interventions." },
+                    { text: "False", isCorrect: true, rationale: "The document states that exercise is beneficial for managing symptoms but also emphasizes the need for a multimodal approach including therapy and coaching." }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const userAnswers = [];
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsScreen = document.getElementById('results-screen');
+        const startBtn = document.getElementById('start-btn');
+        const questionText = document.getElementById('question-text');
+        const answerButtons = document.getElementById('answer-buttons');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreText = document.getElementById('score-text');
+        const summaryContainer = document.getElementById('summary-container');
+        const restartBtn = document.getElementById('restart-btn');
+        // New element reference for the Copy button
+        const copyBtn = document.getElementById('copy-btn');
+
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        });
+        restartBtn.addEventListener('click', resetQuiz);
+        // New event listener for the Copy button
+        copyBtn.addEventListener('click', copyResults);
+
+        function startQuiz() {
+            welcomeScreen.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers.length = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = questions[currentQuestionIndex];
+            questionText.innerText = `Question ${currentQuestionIndex + 1} of ${questions.length}: ${currentQuestion.question}`;
+            currentQuestion.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerText = answer.text;
+                button.classList.add('btn-blue', 'font-bold', 'py-3', 'px-4', 'rounded-lg', 'shadow-md', 'text-sm');
+                if (answer.isCorrect) {
+                    button.dataset.isCorrect = answer.isCorrect;
+                }
+                button.addEventListener('click', selectAnswer);
+                answerButtons.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            while (answerButtons.firstChild) {
+                answerButtons.removeChild(answerButtons.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const isCorrect = selectedBtn.dataset.isCorrect === 'true';
+            
+            userAnswers[currentQuestionIndex] = {
+                question: questions[currentQuestionIndex].question,
+                selectedAnswer: selectedBtn.innerText,
+                isCorrect: isCorrect,
+                correctAnswer: questions[currentQuestionIndex].answers.find(a => a.isCorrect).text,
+                rationale: questions[currentQuestionIndex].answers.find(a => a.isCorrect).rationale
+            };
+
+            if (isCorrect) {
+                score++;
+                selectedBtn.classList.add('btn-correct');
+            } else {
+                selectedBtn.classList.add('btn-incorrect');
+            }
+
+            Array.from(answerButtons.children).forEach(button => {
+                if (button.dataset.isCorrect === 'true') {
+                    button.classList.add('btn-correct');
+                }
+                button.classList.add('btn-disabled');
+            });
+            nextBtn.classList.remove('hidden');
+        }
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            scoreText.innerText = `You scored ${score} out of ${questions.length}!`;
+            
+            summaryContainer.innerHTML = '';
+            userAnswers.forEach((answer, index) => {
+                const summaryItem = document.createElement('div');
+                summaryItem.classList.add('mb-4', 'p-4', 'rounded-lg');
+                summaryItem.innerHTML = `
+                    <p class="font-bold text-lg text-blue-300">Question ${index + 1}: ${answer.question}</p>
+                    <p class="text-gray-400 mt-2">Your answer: <span class="${answer.isCorrect ? 'text-green-400' : 'text-red-400'} font-semibold">${answer.selectedAnswer}</span></p>
+                    <p class="text-gray-400">Correct answer: <span class="text-green-400 font-semibold">${answer.correctAnswer}</span></p>
+                    <p class="text-gray-500 text-sm mt-2">${answer.rationale}</p>
+                `;
+                summaryContainer.appendChild(summaryItem);
+            });
+        }
+
+        async function copyResults() {
+            let summaryText = `--- Quiz Results: ADHD in Elite Sports ---\n\n`;
+            summaryText += `Score: ${score} out of ${questions.length}\n\n`;
+
+            userAnswers.forEach((answer, index) => {
+                const status = answer.isCorrect ? 'Correct' : 'Incorrect';
+                summaryText += `Q${index + 1}: ${answer.question}\n`;
+                summaryText += `Your Answer: ${answer.selectedAnswer} [${status}]\n`;
+                summaryText += `Correct Answer: ${answer.correctAnswer}\n`;
+                summaryText += `Rationale: ${answer.rationale}\n\n`;
+            });
+
+            try {
+                await navigator.clipboard.writeText(summaryText);
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = 'Copied!';
+                
+                // Temporarily change button text for confirmation
+                setTimeout(() => {
+                    copyBtn.innerText = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy results: ', err);
+                copyBtn.innerText = 'Failed to Copy!';
+                setTimeout(() => {
+                    copyBtn.innerText = 'Copy Results';
+                }, 2000);
+            }
+        }
+
+        function resetQuiz() {
+            resultsScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
